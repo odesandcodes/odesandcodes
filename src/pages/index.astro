@@ -8,7 +8,7 @@ const posts = await getCollection('posts');
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Odes & Codes</title>
-    <style>
+    <style is:global>
         :root {
             --bg: #e8e4d9;
             --card-bg: #f4f1e6;
@@ -104,7 +104,7 @@ const posts = await getCollection('posts');
             .sidebar {
                 margin-bottom: 40px; /* Space between About and the first card */
             }
-        }se
+        }
         .card {
             background-color: var(--card-bg);
             background-image: 
