@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -16,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # BUILD 1: For Cloudflare (.pages.dev)
+      # Now we only build once. Cloudflare is the sole destination.
       - name: Build for Cloudflare
         run: npm run build
       
@@ -25,20 +26,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          # This pushes your 'dist' folder to odesandcodes.pages.dev
           command: pages deploy dist --project-name=odesandcodes
-
-      # BUILD 2: For Caddy (AWS IP/odes)
-      - name: Build for Caddy
-        run: |
-          rm -rf dist
-          DEPLOY_TARGET=caddy npm run build
-
-      - name: Push to AWS
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          REMOTE_HOST: ${{ secrets.SERVER_IP }}
-          REMOTE_USER: ubuntu
-          SOURCE: "dist/"
-          TARGET: "/var/www/odes/dist"
-          ARGS: "-rlgoDzvc -i --delete"
