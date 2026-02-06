@@ -1,20 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Odes & Codes | Admin</title>
-  <link rel="stylesheet" href="https://unpkg.com/@staticcms/app@latest/dist/static-cms-app.css" />
-  <style>
-    /* Our tiny fix to keep those logos from being huge */
-    svg, img {
-      max-width: 24px !important;
-      max-height: 24px !important;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiny CMS | Odes & Codes</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f4f4; }
+        #sidebar { width: 250px; background: #222; color: white; padding: 20px; overflow-y: auto; }
+        #editor { flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 20px; }
+        input, textarea { padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        textarea { flex: 1; font-family: monospace; }
+        button { padding: 15px 25px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .post-item { cursor: pointer; padding: 10px 0; border-bottom: 1px solid #444; }
+        .post-item:hover { color: #007bff; }
+        #login-screen { position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 100; }
+    </style>
 </head>
 <body>
-  <div id="nc-root"></div>
-  <script src="https://unpkg.com/@staticcms/app@latest/dist/static-cms-app.js"></script>
+
+<div id="login-screen">
+    <button onclick="login()">Login with GitHub</button>
+</div>
+
+<div id="sidebar">
+    <h3>Posts</h3>
+    <button onclick="newPost()" style="width:100%; margin-bottom: 20px;">+ New Post</button>
+    <div id="file-list">Loading...</div>
+</div>
+
+<div id="editor">
+    <input type="text" id="title" placeholder="Filename (e.g. my-post.md)">
+    <textarea id="content" placeholder="Write markdown here..."></textarea>
+    <button onclick="savePost()">Save to GitHub</button>
+</div>
+
+<script>
+    let TOKEN = localStorage.getItem('gh_token');
+    const REPO = "nepsidehustle/odesandcodes";
+    const WORKER = "https://odesandcodes-auth.leatherandpainted.workers.dev";
+
+    if (TOKEN) document.getElementById('login-screen').style.display = 'none';
+
+    function login() {
+        const win = window.open(WORKER + "/auth", "login", "width=600,height=700");
+        window.onmessage = (e) => {
+            if (e.data.token) {
+                TOKEN = e.data.token;
+                localStorage.setItem('gh_token', TOKEN);
+                location.reload();
+            }
+        };
+    }
+
+    async function fetchPosts() {
+        if (!TOKEN) return;
+        const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/src/content/blog`, {
+            headers: { 'Authorization': `token ${TOKEN}` }
+        });
+        const files = await res.json();
+        const list = document.getElementById('file-list');
+        list.innerHTML = files.map(f => `<div class="post-item" onclick="loadPost('${f.path}')">${f.name}</div>`).join('');
+    }
+
+    async function loadPost(path) {
+        const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${path}`, {
+            headers: { 'Authorization': `token ${TOKEN}` }
+        });
+        const file = await res.json();
+        document.getElementById('title').value = file.name;
+        document.getElementById('content').value = atob(file.content);
+        window.currentSha = file.sha;
+        window.currentPath = path;
+    }
+
+    function newPost() {
+        document.getElementById('title').value = "";
+        document.getElementById('content').value = "--- \ntitle: \ndescription: \ndate: " + new Date().toISOString() + "\n---";
+        window.currentSha = null;
+        window.currentPath = null;
+    }
+
+    async function savePost() {
+        const filename = document.getElementById('title').value;
+        const content = document.getElementById('content').value;
+        const path = window.currentPath || `src/content/blog/${filename}`;
+        
+        const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${path}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Update ${filename} via TinyCMS`,
+                content: btoa(content),
+                sha: window.currentSha
+            })
+        });
+
+        if (res.ok) { alert("Saved!"); fetchPosts(); } 
+        else { alert("Error saving. Check console."); }
+    }
+
+    if (TOKEN) fetchPosts();
+</script>
 </body>
 </html>
