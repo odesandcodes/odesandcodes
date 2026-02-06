@@ -3,15 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Odes & Codes Admin</title>
-  <link rel="stylesheet" href="https://unpkg.com/@staticcms/app@4.1.13/dist/static-cms-app.css" />
+  <title>Odes & Codes | Admin</title>
+  <link rel="stylesheet" href="https://unpkg.com/@staticcms/app@latest/dist/static-cms-app.css" />
   <style>
-    /* Our tiny fix for the big logos */
-    svg { width: 24px !important; height: 24px !important; }
+    /* Our tiny fix to keep those logos from being huge */
+    svg, img {
+      max-width: 24px !important;
+      max-height: 24px !important;
+    }
   </style>
 </head>
 <body>
   <div id="nc-root"></div>
-  <script src="https://unpkg.com/@staticcms/app@4.1.13/dist/static-cms-app.js"></script>
+  <script src="https://unpkg.com/@staticcms/app@latest/dist/static-cms-app.js"></script>
 </body>
 </html>
