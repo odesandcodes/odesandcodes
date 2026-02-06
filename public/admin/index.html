@@ -4,20 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Odes & Codes Admin</title>
-  <link rel="stylesheet" href="https://unpkg.com/@staticcms/app@^4.0.0/dist/static-cms-app.css" />
+  <link rel="stylesheet" href="https://unpkg.com/@staticcms/app@4.1.13/dist/static-cms-app.css" />
+  <style>
+    /* Our tiny fix for the big logos */
+    svg { width: 24px !important; height: 24px !important; }
+  </style>
 </head>
 <body>
   <div id="nc-root"></div>
-  <script src="https://unpkg.com/@staticcms/app@^4.0.0/dist/static-cms-app.js"></script>
-  <script>
-    // Manually verify the script loaded and start the UI
-    window.addEventListener('load', () => {
-      if (window.CMS) {
-        console.log("CMS Loaded Successfully");
-      } else {
-        console.error("CMS Script Failed to Load");
-      }
-    });
-  </script>
+  <script src="https://unpkg.com/@staticcms/app@4.1.13/dist/static-cms-app.js"></script>
 </body>
 </html>
