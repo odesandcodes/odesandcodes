@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
-const posts = await getCollection('posts');
+
+// This grabs all files from src/content/blog/
+const allCards = await getCollection('blog');
 ---
 
 <html lang="en">
@@ -157,14 +159,14 @@ const posts = await getCollection('posts');
             </div>
         </aside>
 
-        <main class="stream">
-            {posts.map(post => (
-                <article class="card">
-                    <div class="post-body">{post.body}</div>
-                    <div class="caption">// {post.data.caption}</div>
-                </article>
-            ))}
-        </main>
+       <main class="stream">
+    {allCards.map(post => (
+        <article class="card">
+            <div class="post-body">{post.body}</div>
+            <div class="caption">// {post.data.description}</div>
+        </article>
+    ))}
+</main>
 
         <footer>
             <p>© 2026 NEPS. ALL RIGHTS RESERVED.</p>
