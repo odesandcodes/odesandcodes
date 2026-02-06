@@ -3,17 +3,23 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Content Manager</title>
+  <title>Odes & Codes | Admin</title>
   <link rel="stylesheet" href="https://unpkg.com/@staticcms/app@^4.0.0/dist/static-cms-app.css" />
+  <style>
+    /* Quick fix for oversized icons/logos */
+    svg {
+      max-width: 24px;
+      max-height: 24px;
+    }
+    /* Make the editor feel more like a writing space */
+    .EditorPane_content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body>
   <div id="nc-root"></div>
-  
   <script src="https://unpkg.com/@staticcms/app@^4.0.0/dist/static-cms-app.js"></script>
-  
-  <script>
-    // 4. Force initialize if it doesn't start automatically
-    window.CMS.init();
-  </script>
 </body>
 </html>
