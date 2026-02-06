@@ -175,35 +175,33 @@ date: 2026-02-06
         }
     }
 
-    async function fetchPosts() {
-        if (!TOKEN) return;
-        try {
-            const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${BLOG_PATH}`, {
-                headers: { 'Authorization': `token ${TOKEN}` }
-            });
+async function fetchPosts() {
+    if (!TOKEN) return;
+    try {
+        const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${BLOG_PATH}`, {
+            headers: { 'Authorization': `token ${TOKEN}` }
+        });
 
-            // --- THE BOUNCER CHECK ---
-            if (res.status === 403) {
-                alert("Unauthorized: This CMS is private property.");
-                localStorage.removeItem('gh_token'); // Wipe the hacker's token
-                location.reload(); // Kick them back to the login screen
-                return;
-            }
-
-            if (!res.ok) throw new Error("GitHub API error");
-            // -------------------------
-
-            const files = await res.json();
-            const list = document.getElementById('file-list');
-            list.innerHTML = files
-                .filter(f => f.name.endsWith('.md'))
-                .map(f => `<div class="post-item" onclick="loadPost('${f.path}')">📄 ${f.name}</div>`)
-                .join('');
-        } catch (err) {
-            console.error(err);
-            document.getElementById('file-list').innerHTML = "Error loading posts.";
+        // If the Worker returns 403, it means the username didn't match 'nepsidehustle'
+        if (res.status === 403) {
+            alert("⚠️ Unauthorized: You do not have access to this CMS.");
+            localStorage.removeItem('gh_token');
+            location.reload();
+            return;
         }
+
+        if (!res.ok) throw new Error("Could not load posts.");
+
+        const files = await res.json();
+        const list = document.getElementById('file-list');
+        list.innerHTML = files
+            .filter(f => f.name.endsWith('.md'))
+            .map(f => `<div class="post-item" onclick="loadPost('${f.path}')">📄 ${f.name}</div>`)
+            .join('');
+    } catch (err) {
+        document.getElementById('file-list').innerHTML = "Error loading posts.";
     }
+}
 
     async function loadPost(path) {
         const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${path}`, {
