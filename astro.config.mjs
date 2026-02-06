@@ -1,9 +1,10 @@
 import { defineConfig } from 'astro/config';
+import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
-  // Hardcode this to root for now to eliminate the variable as a point of failure
-  base: '/', 
-  outDir: './dist',
-  // Cloudflare doesn't need a site URL to render CSS, but it helps for absolute links
-  site: 'https://odesandcodes.pages.dev', 
+  output: 'static',
+  adapter: cloudflare(),
+  // Use your actual domain here so Astro generates links correctly
+  site: 'https://odesandcodes.com', 
+  base: '/',
 });
