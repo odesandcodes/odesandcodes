@@ -30,7 +30,21 @@
 <div id="sidebar">
     <button class="btn btn-new" onclick="newPost()">+ New Post</button>
     <div id="file-list">Loading posts...</div>
+    <button class="btn btn-logout" onclick="logout()" style="margin-top: 20px; background: #ef4444;">Logout</button>
 </div>
+
+<script>
+    // ... keep all your existing variables (TOKEN, REPO, etc.) ...
+
+    function logout() {
+        if (confirm("Are you sure you want to log out?")) {
+            localStorage.removeItem('gh_token');
+            location.reload(); // This brings back the login screen
+        }
+    }
+
+    // ... keep the rest of your fetchPosts, loadPost, savePost functions exactly as they are ...
+</script>
 
 <div id="editor">
     <input type="text" id="title" placeholder="filename-example.md">
