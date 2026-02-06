@@ -1,46 +1,43 @@
 # Odes & Codes
 
-A digital ledger of technical experiments and poetic fragments. Built for speed, durability, and a minimalist aesthetic.
+A high-performance, minimalist personal blog built with **Astro**, deployed on **Cloudflare Pages**, and managed via a custom **TinyCMS** integration.
 
-## 🏗 The Stack
-* **Framework:** [Astro 5.0](https://astro.build/) (Content Collections API)
-* **Hosting:** [Cloudflare Pages](https://pages.cloudflare.com/)
-* **Editor:** Zero-CMS (Direct GitHub Markdown editing)
+## 🚀 Tech Stack
 
----
+- **Framework:** [Astro 5.0](https://astro.build/) (Static Output)
+- **Deployment:** [Cloudflare Pages](https://pages.cloudflare.com/)
+- **CMS:** TinyCMS (Custom Vanilla JS/HTML5)
+- **Authentication:** GitHub OAuth via Cloudflare Workers
+- **Styling:** CSS Variables & Responsive Design
 
-## 📱 Mobile Workflow (Posting from your phone)
-This site is designed to be updated without a computer. 
+## 📂 Project Structure
 
-1.  Open the **GitHub App** on your phone.
-2.  Navigate to `src/content/blog/`.
-3.  Tap **Create new file**.
-4.  **Name it:** `YYYY-MM-DD-title.md` (e.g., `2026-02-05-first-entry.md`).
-5.  **Paste this template:**
+- `src/content/blog/`: The source of truth. All posts are stored here as `.md` files.
+- `src/pages/`: Astro components that render the frontend.
+- `public/admin/`: The TinyCMS dashboard. A single-file entry point for content management.
+- `astro.config.mjs`: Configuration for static site generation.
 
----
-title: "Your Title"
-description: "Brief caption/footer text"
-date: 2026-02-05
----
+## 🛠 The TinyCMS Workflow
 
-Write your post or paste your code here.
+This project uses a custom-built "Headless" CMS workflow to avoid heavy third-party dependencies.
 
-6.  **Commit changes.** Cloudflare will build and deploy the update in ~60 seconds.
+1. **Authentication:** The Admin panel uses a Cloudflare Worker proxy to handle GitHub OAuth.
+2. **Persistence:** Access tokens are stored in `localStorage` for seamless sessions.
+3. **API Bridge:** The Cloudflare Worker acts as a secure CORS proxy to communicate with the GitHub REST API.
+4. **Automation:** Saving a post in the TinyCMS triggers a GitHub Commit, which automatically starts a new Cloudflare Pages build.
 
----
+## 🔄 Development & Syncing
 
-## 💻 Local Development (MacBook)
-For design changes and architectural tweaks:
+Because content can be created both via the web dashboard and locally on a machine, it is vital to keep the local repository in sync.
+
+### The Golden Rule:
+**Always pull before you push.**
 
 ```bash
-# Setup
-npm install
+# Before starting local work:
+git pull origin main
 
-# Development
-npm run dev
-
-# Deploy
+# After finishing local work:
 git add .
-git commit -m "Brief description of change"
-git push
+git commit -m "Update description"
+git push origin main
