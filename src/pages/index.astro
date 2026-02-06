@@ -1,12 +1,13 @@
 ---
 import { getCollection } from 'astro:content';
 
-// 1. Get all the cards from the blog folder
 const posts = await getCollection('blog');
 
-// 2. Sort them: Newest Date first
+// "Heavy Duty" Sort: Forces everything to a number before subtracting
 const allCards = posts.sort((a, b) => {
-  return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+  const dateB = new Date(b.data.date).getTime();
+  const dateA = new Date(a.data.date).getTime();
+  return dateB - dateA;
 });
 ---
 

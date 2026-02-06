@@ -1,11 +1,13 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders'; // This is the Astro 5 way!
 
-const posts = defineCollection({
-  type: 'content',
+const blog = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
   schema: z.object({
-    caption: z.string(), // This is your monospace caption
-    date: z.date().optional(), // Optional: for sorting later
+    title: z.string(),
+    description: z.string(),
+    date: z.coerce.date(), // This "coerce" is the secret sauce
   }),
 });
 
-export const collections = { posts };
+export const collections = { blog };
