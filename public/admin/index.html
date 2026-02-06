@@ -3,42 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiny CMS | Odes & Codes</title>
+    <title>Odes & Codes | Admin</title>
     <style>
-        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f4f4; }
-        #sidebar { width: 250px; background: #222; color: white; padding: 20px; overflow-y: auto; }
-        #editor { flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 20px; }
-        input, textarea { padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
-        textarea { flex: 1; font-family: monospace; }
-        button { padding: 15px 25px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; }
-        button:hover { background: #0056b3; }
-        .post-item { cursor: pointer; padding: 10px 0; border-bottom: 1px solid #444; }
-        .post-item:hover { color: #007bff; }
-        #login-screen { position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 100; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: -apple-system, system-ui, sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--text); }
+        #sidebar { width: 280px; background: #1e293b; color: white; padding: 20px; display: flex; flex-direction: column; }
+        #file-list { flex: 1; overflow-y: auto; margin-top: 20px; }
+        .post-item { cursor: pointer; padding: 12px; border-radius: 6px; margin-bottom: 5px; transition: 0.2s; font-size: 14px; opacity: 0.8; }
+        .post-item:hover { background: #334155; opacity: 1; }
+        #editor { flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 15px; max-width: 900px; margin: 0 auto; width: 100%; }
+        input, textarea { padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; }
+        textarea { flex: 1; font-family: 'Menlo', monospace; line-height: 1.5; resize: none; }
+        .btn { padding: 12px 20px; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 600; transition: 0.2s; }
+        .btn:hover { background: #1d4ed8; }
+        .btn-new { background: #10b981; margin-bottom: 20px; }
+        #login-screen { position: fixed; inset: 0; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <button onclick="login()">Login with GitHub</button>
+    <h1>Odes & Codes CMS</h1>
+    <button class="btn" onclick="login()">Login with GitHub</button>
 </div>
 
 <div id="sidebar">
-    <h3>Posts</h3>
-    <button onclick="newPost()" style="width:100%; margin-bottom: 20px;">+ New Post</button>
-    <div id="file-list">Loading...</div>
+    <button class="btn btn-new" onclick="newPost()">+ New Post</button>
+    <div id="file-list">Loading posts...</div>
 </div>
 
 <div id="editor">
-    <input type="text" id="title" placeholder="Filename (e.g. my-post.md)">
-    <textarea id="content" placeholder="Write markdown here..."></textarea>
-    <button onclick="savePost()">Save to GitHub</button>
+    <input type="text" id="title" placeholder="filename-example.md">
+    <textarea id="content" placeholder="---
+title: My Post
+description: Short summary
+date: 2026-02-06
+---
+# Content starts here..."></textarea>
+    <button class="btn" id="save-btn" onclick="savePost()">Save to GitHub</button>
 </div>
 
 <script>
     let TOKEN = localStorage.getItem('gh_token');
     const REPO = "nepsidehustle/odesandcodes";
     const WORKER = "https://odesandcodes-auth.leatherandpainted.workers.dev";
+    const BLOG_PATH = "src/content/blog";
 
     if (TOKEN) document.getElementById('login-screen').style.display = 'none';
 
@@ -55,12 +64,21 @@
 
     async function fetchPosts() {
         if (!TOKEN) return;
-        const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/src/content/blog`, {
-            headers: { 'Authorization': `token ${TOKEN}` }
-        });
-        const files = await res.json();
-        const list = document.getElementById('file-list');
-        list.innerHTML = files.map(f => `<div class="post-item" onclick="loadPost('${f.path}')">${f.name}</div>`).join('');
+        try {
+            const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${BLOG_PATH}`, {
+                headers: { 'Authorization': `token ${TOKEN}` }
+            });
+            const files = await res.json();
+            if (!Array.isArray(files)) throw new Error("Could not find blog folder");
+            
+            const list = document.getElementById('file-list');
+            list.innerHTML = files
+                .filter(f => f.name.endsWith('.md'))
+                .map(f => `<div class="post-item" onclick="loadPost('${f.path}')">📄 ${f.name}</div>`)
+                .join('');
+        } catch (err) {
+            document.getElementById('file-list').innerHTML = "Error loading posts.";
+        }
     }
 
     async function loadPost(path) {
@@ -69,35 +87,51 @@
         });
         const file = await res.json();
         document.getElementById('title').value = file.name;
-        document.getElementById('content').value = atob(file.content);
+        document.getElementById('content').value = decodeURIComponent(escape(atob(file.content)));
         window.currentSha = file.sha;
         window.currentPath = path;
     }
 
     function newPost() {
         document.getElementById('title').value = "";
-        document.getElementById('content').value = "--- \ntitle: \ndescription: \ndate: " + new Date().toISOString() + "\n---";
+        document.getElementById('content').value = "---\ntitle: \ndescription: \ndate: " + new Date().toISOString().split('T')[0] + "\n---";
         window.currentSha = null;
         window.currentPath = null;
     }
 
     async function savePost() {
+        const saveBtn = document.getElementById('save-btn');
         const filename = document.getElementById('title').value;
         const content = document.getElementById('content').value;
-        const path = window.currentPath || `src/content/blog/${filename}`;
+        
+        if (!filename.endsWith('.md')) { alert("Filename must end in .md"); return; }
+        
+        saveBtn.innerText = "Saving...";
+        saveBtn.disabled = true;
+
+        const path = window.currentPath || `${BLOG_PATH}/${filename}`;
         
         const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${path}`, {
             method: 'PUT',
             headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                message: `Update ${filename} via TinyCMS`,
-                content: btoa(content),
-                sha: window.currentSha
+                message: `Admin Update: ${filename}`,
+                content: btoa(unescape(encodeURIComponent(content))),
+                sha: window.currentSha || undefined
             })
         });
 
-        if (res.ok) { alert("Saved!"); fetchPosts(); } 
-        else { alert("Error saving. Check console."); }
+        if (res.ok) {
+            alert("✅ Successfully saved to GitHub!");
+            saveBtn.innerText = "Save to GitHub";
+            saveBtn.disabled = false;
+            fetchPosts();
+        } else {
+            const err = await res.json();
+            alert("❌ Error: " + err.message);
+            saveBtn.innerText = "Save to GitHub";
+            saveBtn.disabled = false;
+        }
     }
 
     if (TOKEN) fetchPosts();
