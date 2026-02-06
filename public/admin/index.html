@@ -3,37 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Odes & Codes Admin</title>
+  <title>Odes & Codes | Admin</title>
   <link rel="stylesheet" href="https://unpkg.com/@staticcms/app@^4.0.0/dist/static-cms-app.css" />
+  <style>
+    /* This tames the "Ugly Logos" by forcing them to a normal size */
+    svg, img {
+      max-width: 24px !important;
+      max-height: 24px !important;
+    }
+    /* Helps make the sidebar readable */
+    [class*="sidebar"] svg {
+      width: 20px !important;
+    }
+  </style>
 </head>
 <body>
+  <div id="nc-root"></div>
   <script src="https://unpkg.com/@staticcms/app@^4.0.0/dist/static-cms-app.js"></script>
-  <script>
-    // This manually tells the CMS to wake up and look for the config in the same folder
-    window.initCMS({
-      config: {
-        backend: {
-          name: "github",
-          repo: "nepsidehustle/odesandcodes",
-          branch: "main",
-          base_url: "https://odesandcodes-auth.leatherandpainted.workers.dev"
-        },
-        media_folder: "public/images",
-        public_folder: "/images",
-        collections: [
-          {
-            name: "blog",
-            label: "Blog",
-            folder: "src/content/blog",
-            create: true,
-            fields: [
-              { label: "Title", name: "title", widget: "string" },
-              { label: "Body", name: "body", widget: "markdown" }
-            ]
-          }
-        ]
-      }
-    });
-  </script>
 </body>
 </html>
