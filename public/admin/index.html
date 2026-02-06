@@ -3,19 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Odes & Codes | Admin</title>
+  <title>Odes & Codes Admin</title>
   <link rel="stylesheet" href="https://unpkg.com/@staticcms/app@^4.0.0/dist/static-cms-app.css" />
   <style>
-    /* Quick fix for oversized icons/logos */
-    svg {
-      max-width: 24px;
-      max-height: 24px;
-    }
-    /* Make the editor feel more like a writing space */
-    .EditorPane_content {
-      max-width: 800px;
-      margin: 0 auto;
-    }
+    /* This is the only 'safety' CSS we need to stop the big icons */
+    svg { width: 20px; height: 20px; }
+    #nc-root [class^="IconWrapper"] { width: 20px; }
   </style>
 </head>
 <body>

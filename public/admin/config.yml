@@ -3,7 +3,6 @@ backend:
   repo: nepsidehustle/odesandcodes
   branch: main
   base_url: https://odesandcodes-auth.leatherandpainted.workers.dev
-  # site_domain removed temporarily to troubleshoot the blank screen
 
 media_folder: "public/images"
 public_folder: "/images"
@@ -13,6 +12,9 @@ collections:
     label: "Blog"
     folder: "src/content/blog"
     create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     fields:
       - { label: "Title", name: "title", widget: "string" }
+      - { label: "Description", name: "description", widget: "string" }
+      - { label: "Publish Date", name: "date", widget: "datetime" }
       - { label: "Body", name: "body", widget: "markdown" }
