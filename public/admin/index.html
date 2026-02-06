@@ -7,119 +7,23 @@
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
         * { box-sizing: border-box; }
-        
-        body { 
-            font-family: -apple-system, system-ui, sans-serif; 
-            margin: 0; 
-            display: flex; 
-            height: 100vh; 
-            background: var(--bg); 
-            color: var(--text); 
-        }
-
-        #sidebar { 
-            width: 280px; 
-            background: #1e293b; 
-            color: white; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            flex-shrink: 0;
-        }
-
-        #file-list { 
-            flex: 1; 
-            overflow-y: auto; 
-            margin: 15px 0; 
-            border-top: 1px solid #334155;
-            padding-top: 10px;
-        }
-
-        .post-item { 
-            cursor: pointer; 
-            padding: 10px; 
-            border-radius: 6px; 
-            margin-bottom: 4px; 
-            font-size: 14px; 
-            opacity: 0.8;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        body { font-family: -apple-system, system-ui, sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--text); }
+        #sidebar { width: 280px; background: #1e293b; color: white; padding: 20px; display: flex; flex-direction: column; flex-shrink: 0; }
+        #file-list { flex: 1; overflow-y: auto; margin: 15px 0; border-top: 1px solid #334155; padding-top: 10px; }
+        .post-item { cursor: pointer; padding: 10px; border-radius: 6px; margin-bottom: 4px; font-size: 14px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .post-item:hover { background: #334155; opacity: 1; }
-
-        #editor { 
-            flex: 1; 
-            padding: 25px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px; 
-            max-width: 1000px; 
-            margin: 0 auto; 
-            width: 100%;
-        }
-
-        input, textarea { 
-            padding: 12px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            width: 100%; 
-        }
-
-        textarea { 
-            flex: 1; 
-            font-family: 'Menlo', monospace; 
-            line-height: 1.5; 
-            resize: none; 
-            min-height: 300px;
-        }
-
-        .btn { 
-            padding: 12px 20px; 
-            cursor: pointer; 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            border-radius: 6px; 
-            font-weight: 600; 
-        }
-
+        #editor { flex: 1; padding: 25px; display: flex; flex-direction: column; gap: 15px; max-width: 1000px; margin: 0 auto; width: 100%; }
+        input, textarea { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 16px; width: 100%; }
+        textarea { flex: 1; font-family: 'Menlo', monospace; line-height: 1.5; resize: none; min-height: 300px; }
+        .btn { padding: 12px 20px; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 600; }
         .btn-new { background: #10b981; }
-        .btn-logout { background: #ef4444; font-size: 12px; padding: 8px; }
-
-        #login-screen { 
-            position: fixed; 
-            inset: 0; 
-            background: white; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            z-index: 100; 
-        }
-
-        /* --- MOBILE FIXES --- */
+        .btn-logout { background: #ef4444; font-size: 12px; padding: 8px; margin-top: 10px; }
+        #login-screen { position: fixed; inset: 0; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; }
-            #sidebar { 
-                width: 100%; 
-                height: auto; 
-                padding: 15px;
-            }
-            #file-list { 
-                max-height: 150px; 
-                display: flex; 
-                overflow-x: auto; 
-                overflow-y: hidden;
-                gap: 10px;
-                border-top: none;
-            }
-            .post-item { 
-                background: #334155; 
-                flex-shrink: 0; 
-                padding: 8px 15px;
-            }
+            #sidebar { width: 100%; height: auto; padding: 15px; }
+            #file-list { max-height: 150px; display: flex; overflow-x: auto; gap: 10px; border-top: none; }
+            .post-item { background: #334155; flex-shrink: 0; padding: 8px 15px; }
             #editor { padding: 15px; }
             textarea { min-height: 450px; }
         }
@@ -175,33 +79,29 @@ date: 2026-02-06
         }
     }
 
-async function fetchPosts() {
-    if (!TOKEN) return;
-    try {
-        const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${BLOG_PATH}`, {
-            headers: { 'Authorization': `token ${TOKEN}` }
-        });
-
-        // If the Worker returns 403, it means the username didn't match 'nepsidehustle'
-        if (res.status === 403) {
-            alert("⚠️ Unauthorized: You do not have access to this CMS.");
-            localStorage.removeItem('gh_token');
-            location.reload();
-            return;
+    async function fetchPosts() {
+        if (!TOKEN) return;
+        try {
+            const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${BLOG_PATH}`, {
+                headers: { 'Authorization': `token ${TOKEN}` }
+            });
+            if (res.status === 403) {
+                alert("⚠️ Unauthorized: This CMS is private property.");
+                localStorage.removeItem('gh_token');
+                location.reload();
+                return;
+            }
+            if (!res.ok) throw new Error("Could not load");
+            const files = await res.json();
+            const list = document.getElementById('file-list');
+            list.innerHTML = files
+                .filter(f => f.name.endsWith('.md'))
+                .map(f => `<div class="post-item" onclick="loadPost('${f.path}')">📄 ${f.name}</div>`)
+                .join('');
+        } catch (err) {
+            document.getElementById('file-list').innerHTML = "Error loading posts.";
         }
-
-        if (!res.ok) throw new Error("Could not load posts.");
-
-        const files = await res.json();
-        const list = document.getElementById('file-list');
-        list.innerHTML = files
-            .filter(f => f.name.endsWith('.md'))
-            .map(f => `<div class="post-item" onclick="loadPost('${f.path}')">📄 ${f.name}</div>`)
-            .join('');
-    } catch (err) {
-        document.getElementById('file-list').innerHTML = "Error loading posts.";
     }
-}
 
     async function loadPost(path) {
         const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${path}`, {
@@ -212,26 +112,19 @@ async function fetchPosts() {
         document.getElementById('content').value = decodeURIComponent(escape(atob(file.content)));
         window.currentSha = file.sha;
         window.currentPath = path;
-        // Scroll to editor on mobile
-        if (window.innerWidth < 768) {
-            document.getElementById('editor').scrollIntoView({ behavior: 'smooth' });
-        }
+        if (window.innerWidth < 768) document.getElementById('editor').scrollIntoView({ behavior: 'smooth' });
     }
 
     function newPost() {
         document.getElementById('title').value = "";
-        
-        // Generates: 2026-02-06T14:45 (No seconds or milliseconds)
         const now = new Date();
         const cleanDate = now.toISOString().split('T')[0] + 'T' + 
-                        now.getHours().toString().padStart(2, '0') + ':' + 
-                        now.getMinutes().toString().padStart(2, '0');
-
-        document.getElementById('content').value = `
-    title: 
-    description: 
-    date: ${cleanDate}
-    ---`;
+                          now.getHours().toString().padStart(2, '0') + ':' + 
+                          now.getMinutes().toString().padStart(2, '0');
+        
+        // FORCED FLUSH LEFT FORMATTING
+        document.getElementById('content').value = "---\ntitle: \ndescription: \ndate: " + cleanDate + "\n---\n";
+        
         window.currentSha = null;
         window.currentPath = null;
     }
@@ -241,10 +134,8 @@ async function fetchPosts() {
         const filename = document.getElementById('title').value;
         const content = document.getElementById('content').value;
         if (!filename.endsWith('.md')) { alert("Add .md to filename"); return; }
-        
         saveBtn.innerText = "Saving...";
         saveBtn.disabled = true;
-
         const path = window.currentPath || `${BLOG_PATH}/${filename}`;
         const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${path}`, {
             method: 'PUT',
@@ -255,7 +146,6 @@ async function fetchPosts() {
                 sha: window.currentSha || undefined
             })
         });
-
         if (res.ok) {
             alert("✅ Saved!");
             saveBtn.innerText = "Save to GitHub";
@@ -268,7 +158,6 @@ async function fetchPosts() {
             saveBtn.disabled = false;
         }
     }
-
     if (TOKEN) fetchPosts();
 </script>
 </body>
