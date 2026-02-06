@@ -220,7 +220,18 @@ async function fetchPosts() {
 
     function newPost() {
         document.getElementById('title').value = "";
-        document.getElementById('content').value = "---\ntitle: \ndescription: \ndate: " + new Date().toISOString() + "\n---";
+        
+        // Generates: 2026-02-06T14:45 (No seconds or milliseconds)
+        const now = new Date();
+        const cleanDate = now.toISOString().split('T')[0] + 'T' + 
+                        now.getHours().toString().padStart(2, '0') + ':' + 
+                        now.getMinutes().toString().padStart(2, '0');
+
+        document.getElementById('content').value = `-----
+    title: 
+    description: 
+    date: ${cleanDate}
+    ---`;
         window.currentSha = null;
         window.currentPath = null;
     }
