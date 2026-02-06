@@ -1,0 +1,38 @@
+---
+// src/pages/404.astro
+---
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Not Found</title>
+    <style>
+        body { 
+            background-color: #e8e4d9; 
+            color: #2c2c2c; 
+            font-family: "Courier", monospace; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0;
+        }
+        .error-card {
+            background: #f4f1e6;
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+        }
+        a { color: #4a5d4e; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="error-card">
+        <h2>404</h2>
+        <p>This ode does not exist.</p>
+        <p><a href="/">Return to Ledger</a></p>
+    </div>
+</body>
+</html>
