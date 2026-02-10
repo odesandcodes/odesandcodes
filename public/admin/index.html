@@ -70,15 +70,25 @@ date: 2026-02-06
 
   async function login() {
     const password = document.getElementById('password-input').value;
-    if (!password) return;
+    console.log('Login clicked, password:', password ? 'entered' : 'empty');
+    if (!password) {
+        alert("Please enter a password");
+        return;
+    }
     
+    console.log('Sending login request...');
     const res = await fetch(`${AUTH_BASE}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
     });
     
-    if (res.ok) {
+    console.log('Response status:', res.status);
+    const data = await res.json();
+    console.log('Response data:', data);
+    
+    if (data.success) {
+        console.log('Login successful, reloading...');
         location.reload();
     } else {
         alert("❌ Wrong password");
