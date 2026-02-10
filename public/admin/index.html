@@ -54,111 +54,94 @@ date: 2026-02-06
 </div>
 
 <script>
-    let TOKEN = localStorage.getItem('gh_token');
-    const REPO = "nepsidehustle/odesandcodes";
-    const WORKER = "https://odesandcodes-auth.leatherandpainted.workers.dev";
+    const AUTH_BASE = "/admin/auth";
+    const REPO = "odesandcodes/odesandcodes";
     const BLOG_PATH = "src/content/blog";
 
-    if (TOKEN) document.getElementById('login-screen').style.display = 'none';
-
-    function login() {
-        const win = window.open(WORKER + "/auth", "login", "width=600,height=700");
-        window.onmessage = (e) => {
-            if (e.data.token) {
-                TOKEN = e.data.token;
-                localStorage.setItem('gh_token', TOKEN);
-                location.reload();
-            }
-        };
+    async function checkAuth() {
+        const res = await fetch(`${AUTH_BASE}/check`);
+        const data = await res.json();
+        if (data.authenticated) {
+            document.getElementById('login-screen').style.display = 'none';
+            fetchPosts();
+        }
     }
 
-    function logout() {
-        if (confirm("Log out of the CMS?")) {
-            localStorage.removeItem('gh_token');
+    async function login() {
+        const password = prompt("Enter admin password:");
+        if (!password) return;
+        
+        const res = await fetch(`${AUTH_BASE}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+        
+        if (res.ok) {
+            location.reload();
+        } else {
+            alert("❌ Wrong password");
+        }
+    }
+
+    async function logout() {
+        if (confirm("Log out?")) {
+            await fetch(`${AUTH_BASE}/logout`, { method: 'POST' });
             location.reload();
         }
     }
 
     async function fetchPosts() {
-        if (!TOKEN) return;
-        try {
-            const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${BLOG_PATH}`, {
-                headers: { 'Authorization': `token ${TOKEN}` }
-            });
-            if (res.status === 403) {
-                alert("⚠️ Unauthorized: This CMS is private property.");
-                localStorage.removeItem('gh_token');
-                location.reload();
-                return;
-            }
-            if (!res.ok) throw new Error("Could not load");
-            const files = await res.json();
-            const list = document.getElementById('file-list');
-            list.innerHTML = files
-                .filter(f => f.name.endsWith('.md'))
-                .map(f => `<div class="post-item" onclick="loadPost('${f.path}')">📄 ${f.name}</div>`)
-                .join('');
-        } catch (err) {
-            document.getElementById('file-list').innerHTML = "Error loading posts.";
-        }
+        const res = await fetch(`${AUTH_BASE}/github/repos/${REPO}/contents/${BLOG_PATH}`);
+        const files = await res.json();
+        document.getElementById('file-list').innerHTML = files
+            .filter(f => f.name.endsWith('.md'))
+            .map(f => `<div class="post-item" onclick="loadPost('${f.path}')">📄 ${f.name}</div>`)
+            .join('');
     }
 
     async function loadPost(path) {
-        const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${path}`, {
-            headers: { 'Authorization': `token ${TOKEN}` }
-        });
+        const res = await fetch(`${AUTH_BASE}/github/repos/${REPO}/contents/${path}`);
         const file = await res.json();
         document.getElementById('title').value = file.name;
-        document.getElementById('content').value = decodeURIComponent(escape(atob(file.content)));
+        document.getElementById('content').value = atob(file.content);
         window.currentSha = file.sha;
         window.currentPath = path;
-        if (window.innerWidth < 768) document.getElementById('editor').scrollIntoView({ behavior: 'smooth' });
     }
 
     function newPost() {
         document.getElementById('title').value = "";
-        const now = new Date();
-        const cleanDate = now.toISOString().split('T')[0] + 'T' + 
-                          now.getHours().toString().padStart(2, '0') + ':' + 
-                          now.getMinutes().toString().padStart(2, '0');
-        
-        // FORCED FLUSH LEFT FORMATTING
-        document.getElementById('content').value = "---\ntitle: \ndescription: \ndate: " + cleanDate + "\n---\n";
-        
+        const now = new Date().toISOString().split('T')[0] + 'T' + new Date().toTimeString().slice(0,5);
+        document.getElementById('content').value = `---\ntitle: \ndescription: \ndate: ${now}\n---\n`;
         window.currentSha = null;
         window.currentPath = null;
     }
 
     async function savePost() {
-        const saveBtn = document.getElementById('save-btn');
         const filename = document.getElementById('title').value;
         const content = document.getElementById('content').value;
         if (!filename.endsWith('.md')) { alert("Add .md to filename"); return; }
-        saveBtn.innerText = "Saving...";
-        saveBtn.disabled = true;
+        
         const path = window.currentPath || `${BLOG_PATH}/${filename}`;
-        const res = await fetch(`${WORKER}/api/repos/${REPO}/contents/${path}`, {
+        const res = await fetch(`${AUTH_BASE}/github/repos/${REPO}/contents/${path}`, {
             method: 'PUT',
-            headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: `Admin Update: ${filename}`,
-                content: btoa(unescape(encodeURIComponent(content))),
-                sha: window.currentSha || undefined
+                content: btoa(content),
+                sha: window.currentSha
             })
         });
+        
         if (res.ok) {
             alert("✅ Saved!");
-            saveBtn.innerText = "Save to GitHub";
-            saveBtn.disabled = false;
             fetchPosts();
         } else {
-            const err = await res.json();
-            alert("❌ Error: " + err.message);
-            saveBtn.innerText = "Save to GitHub";
-            saveBtn.disabled = false;
+            alert("❌ Error saving");
         }
     }
-    if (TOKEN) fetchPosts();
+
+    checkAuth();
 </script>
 </body>
 </html>
