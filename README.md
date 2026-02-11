@@ -1,43 +1,18 @@
 # Odes & Codes
 
-A high-performance, minimalist personal blog built with **Astro**, deployed on **Cloudflare Pages**, and managed via a custom **TinyCMS** integration.
+Building clean web experiences with minimal footprints.
 
-## 🚀 Tech Stack
+## Live Projects
 
-- **Framework:** [Astro 5.0](https://astro.build/) (Static Output)
-- **Deployment:** [Cloudflare Pages](https://pages.cloudflare.com/)
-- **CMS:** TinyCMS (Custom Vanilla JS/HTML5)
-- **Authentication:** GitHub OAuth via Cloudflare Workers
-- **Styling:** CSS Variables & Responsive Design
+🌊 [**odesandcodes.com**](https://odesandcodes.com) — Main site  
+🌙 [**tides.odesandcodes.com**](https://tides.odesandcodes.com) — Tide tracker  
+🤘 [**metal.odesandcodes.com**](https://metal.odesandcodes.com) — Metal tracker  
+📻 [**radidash.odesandcodes.com**](https://radidash.odesandcodes.com) — Radio dashboard  
 
-## 📂 Project Structure
+## Stack
 
-- `src/content/blog/`: The source of truth. All posts are stored here as `.md` files.
-- `src/pages/`: Astro components that render the frontend.
-- `public/admin/`: The TinyCMS dashboard. A single-file entry point for content management.
-- `astro.config.mjs`: Configuration for static site generation.
+Astro • Caddy • Node.js • AWS
 
-## 🛠 The TinyCMS Workflow
+---
 
-This project uses a custom-built "Headless" CMS workflow to avoid heavy third-party dependencies.
-
-1. **Authentication:** The Admin panel uses a Cloudflare Worker proxy to handle GitHub OAuth.
-2. **Persistence:** Access tokens are stored in `localStorage` for seamless sessions.
-3. **API Bridge:** The Cloudflare Worker acts as a secure CORS proxy to communicate with the GitHub REST API.
-4. **Automation:** Saving a post in the TinyCMS triggers a GitHub Commit, which automatically starts a new Cloudflare Pages build.
-
-## 🔄 Development & Syncing
-
-Because content can be created both via the web dashboard and locally on a machine, it is vital to keep the local repository in sync.
-
-### The Golden Rule:
-**Always pull before you push.**
-
-```bash
-# Before starting local work:
-git pull origin main
-
-# After finishing local work:
-git add .
-git commit -m "Update description"
-git push origin main# odesandcodes
+*Simple tools. Clean code. No bloat.*
