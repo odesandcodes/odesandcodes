@@ -1,43 +1,136 @@
-# Odes & Codes
+# Odes & Codes CMS Setup
 
-A high-performance, minimalist personal blog built with **Astro**, deployed on **Cloudflare Pages**, and managed via a custom **TinyCMS** integration.
+Simple GitHub-based CMS for managing blog posts on odesandcodes.com
 
-## 🚀 Tech Stack
+## Architecture
 
-- **Framework:** [Astro 5.0](https://astro.build/) (Static Output)
-- **Deployment:** [Cloudflare Pages](https://pages.cloudflare.com/)
-- **CMS:** TinyCMS (Custom Vanilla JS/HTML5)
-- **Authentication:** GitHub OAuth via Cloudflare Workers
-- **Styling:** CSS Variables & Responsive Design
+```
+Browser → Caddy (HTTPS) → Express Auth Server → GitHub API
+                ↓
+         Static Files (dist/)
+```
 
-## 📂 Project Structure
+## Components
 
-- `src/content/blog/`: The source of truth. All posts are stored here as `.md` files.
-- `src/pages/`: Astro components that render the frontend.
-- `public/admin/`: The TinyCMS dashboard. A single-file entry point for content management.
-- `astro.config.mjs`: Configuration for static site generation.
+### 1. Express Auth Server (`/var/www/admin-auth/server.js`)
+- Runs on port 3000 (localhost only)
+- Handles login/logout with bcrypt password
+- Proxies authenticated requests to GitHub API
+- **Requires:** `GITHUB_TOKEN` environment variable
 
-## 🛠 The TinyCMS Workflow
+### 2. Caddy Reverse Proxy
+- Routes `/admin/auth/*` → `localhost:3000`
+- Serves static site from `/var/www/odesandcodes/dist`
+- Config managed via API (port 2019)
+- Auto-persists configuration
 
-This project uses a custom-built "Headless" CMS workflow to avoid heavy third-party dependencies.
+### 3. Admin Interface (`/var/www/odesandcodes/dist/admin.html`)
+- Browser-based markdown editor
+- Direct GitHub commits via auth server
+- Manages files in `src/content/blog/`
 
-1. **Authentication:** The Admin panel uses a Cloudflare Worker proxy to handle GitHub OAuth.
-2. **Persistence:** Access tokens are stored in `localStorage` for seamless sessions.
-3. **API Bridge:** The Cloudflare Worker acts as a secure CORS proxy to communicate with the GitHub REST API.
-4. **Automation:** Saving a post in the TinyCMS triggers a GitHub Commit, which automatically starts a new Cloudflare Pages build.
-
-## 🔄 Development & Syncing
-
-Because content can be created both via the web dashboard and locally on a machine, it is vital to keep the local repository in sync.
-
-### The Golden Rule:
-**Always pull before you push.**
+## Running Services
 
 ```bash
-# Before starting local work:
-git pull origin main
+# Check status
+pm2 status
 
-# After finishing local work:
-git add .
-git commit -m "Update description"
-git push origin main# odesandcodes
+# Should see:
+# - server (port 3000) - the auth server
+# - caddy running in background
+
+# View logs
+pm2 logs server
+journalctl -u caddy -f
+```
+
+## Maintenance
+
+### Restart Services
+```bash
+pm2 restart server
+systemctl restart caddy
+```
+
+### Update GitHub Token
+```bash
+pm2 set server GITHUB_TOKEN "new_token_here"
+pm2 restart server --update-env
+pm2 save
+```
+
+### Change Admin Password
+1. Generate new hash: `node -e "console.log(require('bcryptjs').hashSync('newpass', 10))"`
+2. Update `PASSWORD_HASH` in `server.js`
+3. `pm2 restart server`
+
+## Security Notes
+
+- ✅ Password is bcrypt hashed
+- ✅ GitHub token only in environment (never in code)
+- ✅ Auth server only on localhost (not exposed)
+- ✅ Sessions use httpOnly cookies
+- ⚠️ Consider adding rate limiting on `/login`
+- ⚠️ Rotate GitHub token periodically
+
+## Boot Persistence
+
+Ensure services start on reboot:
+```bash
+pm2 startup  # Run the command it outputs
+pm2 save
+systemctl enable caddy
+```
+
+## Troubleshooting
+
+**Posts not loading:**
+- Check `GITHUB_TOKEN` is set: `pm2 env 0` (or correct ID)
+- Verify GitHub token has `repo` permissions
+- Check logs: `pm2 logs server`
+
+**Login not working:**
+- Check session cookies in browser DevTools
+- Verify only ONE server running on port 3000: `pm2 list`
+- Check password hash matches
+
+**Port conflicts:**
+```bash
+# Check what's on port 3000
+netstat -tlnp | grep 3000
+
+# Should only be PM2's server process
+```
+
+## Deploy Workflow
+
+1. Make changes locally
+2. Push to GitHub
+3. GitHub Action builds site
+4. Action deploys to `/var/www/odesandcodes/dist`
+5. Caddy serves updated files (no restart needed)
+6. Admin updates posts via `/admin.html`
+
+## File Locations
+
+- Auth server: `/var/www/admin-auth/`
+- Site files: `/var/www/odesandcodes/dist/`
+- Blog posts: `src/content/blog/*.md` (in GitHub repo)
+- PM2 config: `/home/ubuntu/.pm2/`
+- Caddy config: Managed via API (use `curl localhost:2019/config/`)
+
+## Quick Commands
+
+```bash
+# Check everything
+pm2 status && systemctl status caddy
+
+# Restart everything
+pm2 restart all && systemctl restart caddy
+
+# View all logs
+pm2 logs
+
+# Save current state
+pm2 save
+```
