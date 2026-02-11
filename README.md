@@ -16,22 +16,3 @@ Personal site built with Astro, deployed on AWS with Caddy.
 **Deploy:** GitHub Actions  
 **CMS:** Custom lightweight admin  
 
-## Local Development
-
-```bash
-npm install
-npm run dev
-```
-
-Build for production:
-```bash
-npm run build
-```
-
-## Deploy
-
-Pushes to `main` trigger automatic deployment to AWS via GitHub Actions.
-
----
-
-*Simple tools. Clean code. No bloat.*
