@@ -15,6 +15,6 @@ These numbers could mean anything - HELLO or ABORT or your grocery list. Shannon
 
 The key is gone. So the message exists in superposition, simultaneously containing every possible meaning.
 
-I'm calling it Schrodingers ciphertext.
+I'm calling it Schrodingers Ciphertext.
 
 That's not a bug. That's the feature.
