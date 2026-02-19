@@ -17,4 +17,4 @@ The key is gone. So the message exists in superposition, simultaneously containi
 
 I'm calling it Schrodingers Ciphertext.
 
-That's not a bug. That's the feature.
+That's not a bug. That's the feature. This is fiction.
