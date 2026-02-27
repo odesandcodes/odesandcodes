@@ -10,14 +10,22 @@
         body { font-family: -apple-system, system-ui, sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: var(--text); }
         #sidebar { width: 280px; background: #1e293b; color: white; padding: 20px; display: flex; flex-direction: column; flex-shrink: 0; }
         #file-list { flex: 1; overflow-y: auto; margin: 15px 0; border-top: 1px solid #334155; padding-top: 10px; }
-        .post-item { cursor: pointer; padding: 10px; border-radius: 6px; margin-bottom: 4px; font-size: 14px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .post-item { cursor: pointer; padding: 10px; border-radius: 6px; margin-bottom: 4px; font-size: 14px; opacity: 0.8; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
         .post-item:hover { background: #334155; opacity: 1; }
+        .post-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .btn-delete-post {
+            background: transparent; border: 1px solid #ef4444; color: #ef4444;
+            border-radius: 4px; padding: 2px 7px; font-size: 11px; cursor: pointer;
+            flex-shrink: 0; opacity: 0.7;
+        }
+        .btn-delete-post:hover { background: #ef4444; color: white; opacity: 1; }
         #editor { flex: 1; padding: 25px; display: flex; flex-direction: column; gap: 15px; max-width: 1000px; margin: 0 auto; width: 100%; }
         input, textarea { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 16px; width: 100%; }
         textarea { flex: 1; font-family: 'Menlo', monospace; line-height: 1.5; resize: none; min-height: 300px; }
         .btn { padding: 12px 20px; cursor: pointer; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 600; }
         .btn-new { background: #10b981; }
         .btn-logout { background: #ef4444; font-size: 12px; padding: 8px; margin-top: 10px; }
+        #status-msg { font-size: 13px; color: #64748b; min-height: 20px; }
         #login-screen { position: fixed; inset: 0; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         @media (max-width: 768px) {
             body { flex-direction: column; height: auto; }
@@ -52,12 +60,24 @@ date: 2026-02-06
 ---
 # Content starts here..."></textarea>
     <button class="btn" id="save-btn" onclick="savePost()">Save to GitHub</button>
+    <div id="status-msg"></div>
 </div>
 
 <script>
     const AUTH_BASE = "/admin/auth";
     const REPO = "odesandcodes/odesandcodes";
     const BLOG_PATH = "src/content/blog";
+
+    function setStatus(msg, isError = false) {
+        const el = document.getElementById('status-msg');
+        el.textContent = msg;
+        el.style.color = isError ? '#ef4444' : '#10b981';
+    }
+
+    // Safe base64 encode that handles unicode/UTF-8
+    function toBase64(str) {
+        return btoa(unescape(encodeURIComponent(str)));
+    }
 
     async function checkAuth() {
         const res = await fetch(`${AUTH_BASE}/check`);
@@ -70,17 +90,12 @@ date: 2026-02-06
 
     async function login() {
         const password = document.getElementById('password-input').value;
-        if (!password) {
-            alert("Please enter a password");
-            return;
-        }
-        
+        if (!password) { alert("Please enter a password"); return; }
         const res = await fetch(`${AUTH_BASE}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password })
         });
-        
         const data = await res.json();
         if (data.success) {
             document.getElementById('login-screen').style.display = 'none';
@@ -102,17 +117,23 @@ date: 2026-02-06
         const files = await res.json();
         document.getElementById('file-list').innerHTML = files
             .filter(f => f.name.endsWith('.md'))
-            .map(f => `<div class="post-item" onclick="loadPost('${f.path}')">📄 ${f.name}</div>`)
+            .map(f => `
+                <div class="post-item">
+                    <span class="post-name" onclick="loadPost('${f.path}')">📄 ${f.name}</span>
+                    <button class="btn-delete-post" onclick="deletePost('${f.path}', '${f.sha}', event)">✕</button>
+                </div>`)
             .join('');
     }
 
     async function loadPost(path) {
+        setStatus('Loading...');
         const res = await fetch(`${AUTH_BASE}/github/repos/${REPO}/contents/${path}`);
         const file = await res.json();
         document.getElementById('title').value = file.name;
-        document.getElementById('content').value = atob(file.content);
+        document.getElementById('content').value = decodeURIComponent(escape(atob(file.content)));
         window.currentSha = file.sha;
         window.currentPath = path;
+        setStatus(`Loaded: ${file.name}`);
     }
 
     function newPost() {
@@ -121,29 +142,95 @@ date: 2026-02-06
         document.getElementById('content').value = `---\ntitle: \ndescription: \ndate: ${now}\n---\n`;
         window.currentSha = null;
         window.currentPath = null;
+        setStatus('New post ready.');
     }
 
     async function savePost() {
-        const filename = document.getElementById('title').value;
+        const filename = document.getElementById('title').value.trim();
         const content = document.getElementById('content').value;
-        if (!filename.endsWith('.md')) { alert("Add .md to filename"); return; }
-        
+        if (!filename.endsWith('.md')) { alert("Filename must end in .md"); return; }
+
+        const btn = document.getElementById('save-btn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+        setStatus('Pushing to GitHub...');
+
         const path = window.currentPath || `${BLOG_PATH}/${filename}`;
+
+        // If updating an existing file, always fetch fresh sha first to avoid conflicts
+        let sha = window.currentSha;
+        if (window.currentPath) {
+            try {
+                const check = await fetch(`${AUTH_BASE}/github/repos/${REPO}/contents/${path}`);
+                const checkData = await check.json();
+                sha = checkData.sha;
+            } catch(e) {
+                // If fetch fails, fall back to stored sha
+            }
+        }
+
+        const body = {
+            message: `Admin Update: ${filename}`,
+            content: toBase64(content),
+        };
+        if (sha) body.sha = sha;
+
         const res = await fetch(`${AUTH_BASE}/github/repos/${REPO}/contents/${path}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: `Admin Update: ${filename}`,
-                content: btoa(content),
-                sha: window.currentSha
-            })
+            body: JSON.stringify(body)
         });
-        
+
+        btn.disabled = false;
+        btn.textContent = 'Save to GitHub';
+
         if (res.ok) {
-            alert("✅ Saved!");
+            const data = await res.json();
+            // Update sha so next save on same file works without reload
+            window.currentSha = data.content.sha;
+            window.currentPath = path;
+            setStatus(`✅ Saved: ${filename}`);
             fetchPosts();
         } else {
-            alert("❌ Error saving");
+            const err = await res.json().catch(() => ({}));
+            setStatus(`❌ Save failed: ${err.message || res.status}`, true);
+        }
+    }
+
+    async function deletePost(path, sha, event) {
+        event.stopPropagation();
+        const filename = path.split('/').pop();
+        if (!confirm(`Delete "${filename}"? This cannot be undone.`)) return;
+
+        setStatus(`Deleting ${filename}...`);
+
+        // Always fetch fresh sha before delete
+        let freshSha = sha;
+        try {
+            const check = await fetch(`${AUTH_BASE}/github/repos/${REPO}/contents/${path}`);
+            const checkData = await check.json();
+            freshSha = checkData.sha;
+        } catch(e) {}
+
+        const res = await fetch(`${AUTH_BASE}/github/repos/${REPO}/contents/${path}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Admin Delete: ${filename}`,
+                sha: freshSha
+            })
+        });
+
+        if (res.ok) {
+            setStatus(`🗑️ Deleted: ${filename}`);
+            // If the deleted file was open in editor, clear it
+            if (window.currentPath === path) {
+                newPost();
+            }
+            fetchPosts();
+        } else {
+            const err = await res.json().catch(() => ({}));
+            setStatus(`❌ Delete failed: ${err.message || res.status}`, true);
         }
     }
 
