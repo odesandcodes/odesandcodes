@@ -3,9 +3,7 @@
 
 name = "odesandcodes"
 compatibility_date = "2024-01-01"
-
-[assets]
-directory = "./dist"
+pages_build_output_dir = "./dist"
 
 [[kv_namespaces]]
 binding = "SESSIONS"
