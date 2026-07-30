@@ -13,6 +13,7 @@ export async function onRequest({ request, env, params }) {
   const githubUrl = `https://api.github.com/${githubPath}${url.search}`;
 
   // Forward the request to GitHub
+  console.log('TOKEN CHECK -- present:', !!env.GITHUB_TOKEN, '| length:', env.GITHUB_TOKEN?.length, '| starts:', env.GITHUB_TOKEN?.slice(0,4), '| ends:', env.GITHUB_TOKEN?.slice(-4));
   const githubRes = await fetch(githubUrl, {
     method: request.method,
     headers: {
