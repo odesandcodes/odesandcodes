@@ -13,4 +13,4 @@ pages_build_output_dir = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "odes-blog"
-database_id = "PASTE_DATABASE_ID_AFTER_CREATING"
+database_id = "6a66337f-8843-4e55-bc3b-70a15ebbccf2"
