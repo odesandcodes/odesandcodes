@@ -1,0 +1,1 @@
+{"dependencies":{"@astrojs/cloudflare":"^12.6.12","astro":"^5.17.0"},"name":"odesandcodes","scripts":{"astro":"astro","build":"astro build","dev":"astro dev","preview":"astro preview"},"type":"module","version":"1.0.0"}

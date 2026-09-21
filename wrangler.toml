@@ -1,0 +1,16 @@
+# odesandcodes — Cloudflare Pages + D1
+name = "odesandcodes"
+compatibility_date = "2025-01-01"
+# Needed so Astro's bundled helpers compile for the Workers runtime.
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./dist"
+
+# The D1 database for the blog. Create it once with:
+#   npx wrangler@latest d1 create odes-blog
+# then paste the database_id below. (You can also bind D1 in the
+# Pages dashboard instead: Settings → Functions → D1 database bindings,
+# binding name DB — either way, the binding name must be DB.)
+[[d1_databases]]
+binding = "DB"
+database_name = "odes-blog"
+database_id = "PASTE_DATABASE_ID_AFTER_CREATING"

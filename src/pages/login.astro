@@ -1,0 +1,56 @@
+---
+export const prerender = false;
+const error = Astro.url.searchParams.get("error");
+const next = Astro.url.searchParams.get("next") || "/";
+---
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in | Odes & Codes</title>
+    <style>
+        :root { --bg: #e8e4d9; --card-bg: #f4f1e6; --accent: #4a5d4e; --text: #2c2c2c; --border: rgba(0,0,0,0.1); }
+        body {
+            background-color: var(--bg); color: var(--text);
+            font-family: "Courier", "Courier New", monospace;
+            margin: 0; min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 40px;
+            max-width: 340px;
+            width: 100%;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+        }
+        h1 { font-size: 0.9rem; letter-spacing: 4px; color: var(--accent); margin: 0 0 20px; }
+        input {
+            width: 100%; box-sizing: border-box;
+            font-family: inherit; font-size: 1rem;
+            padding: 10px; margin-bottom: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.6); color: var(--text);
+        }
+        button {
+            font-family: inherit; font-size: 0.85rem; font-weight: bold;
+            padding: 10px 18px; border: none; cursor: pointer;
+            background: var(--accent); color: #f4f1e6; letter-spacing: 2px;
+        }
+        .error { color: #a33b3b; font-size: 0.8rem; margin-bottom: 14px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>ODES & CODES — LOG IN</h1>
+        {error && <div class="error">Wrong password. Try again.</div>}
+        <form method="POST" action="/api/auth/login">
+            <input type="hidden" name="next" value={next} />
+            <input type="password" name="password" placeholder="password" autocomplete="current-password" autofocus />
+            <button type="submit">LOG IN</button>
+        </form>
+    </div>
+</body>
+</html>
